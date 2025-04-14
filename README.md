@@ -33,7 +33,6 @@ cd product-variant-api
 
 ## 📁 Directory Structure
 
-```text
 app/
 ├── Models/
 ├── Http/
