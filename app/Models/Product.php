@@ -13,21 +13,23 @@ class Product extends Model
     protected $fillable = [
         'title',
         'description',
-        'attributes',
         'default_variation_id'
     ];
 
-    protected $casts = [
-        'attributes' => 'array',
-    ];
 
-    public function variations()
+
+    public function attributes()
     {
-        return $this->hasMany(Variation::class);
+        return $this->hasMany(ProductAttribute::class);
+    }
+
+    public function variants()
+    {
+        return $this->hasMany(ProductVariant::class);
     }
 
     public function defaultVariation()
     {
-        return $this->belongsTo(Variation::class, 'default_variation_id');
+        return $this->belongsTo(ProductVariant::class, 'default_variation_id');
     }
 }

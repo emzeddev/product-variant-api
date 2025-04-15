@@ -3,7 +3,7 @@ namespace App\Models;
 
 use MongoDB\Laravel\Eloquent\Model;
 
-class Variation extends Model
+class ProductVariant extends Model
 {
     protected $connection = 'mongodb';
     protected $collection = 'product_variants';

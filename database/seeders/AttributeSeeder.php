@@ -4,26 +4,15 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Attribute;
-use App\Models\AttributeValue;
 
 class AttributeSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
-        $attributes = [
-            'color' => ['red', 'blue', 'green', 'black'],
-            'size' => ['S', 'M', 'L', 'XL', 'XXL']
-        ];
+        $attributes = ['رنگ', 'سایز', 'جنس'];
 
-        foreach ($attributes as $name => $values) {
-            $attribute = Attribute::create(['name' => $name]);
-
-            foreach ($values as $value) {
-                AttributeValue::create([
-                    'attribute_id' => $attribute->_id,
-                    'value' => $value
-                ]);
-            }
+        foreach ($attributes as $name) {
+            Attribute::create(['name' => $name]);
         }
     }
 }
