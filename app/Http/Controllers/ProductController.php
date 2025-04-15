@@ -16,11 +16,11 @@ class ProductController extends Controller
     // لیست کردن محصولات
     public function index()
     {
-        $products = Product::with('variants', 'galleries')->get();
+        $products = Product::with('variants', 'galleries', 'attributes')->get();
         return response()->json($products);
     }
 
-    // ذخیره محصول به همراه تنوع‌ها و ویژگی‌ها
+    // ذخیره محصول به همراه تنوع‌ها، ویژگی‌ها و مقادیر ویژگی‌ها
     public function store(Request $request)
     {
         // اعتبارسنجی ورودی‌ها
@@ -50,14 +50,21 @@ class ProductController extends Controller
             'seo_description' => $request->seo_description,
         ]);
 
-        // ذخیره ویژگی‌ها و مقادیر مربوط به محصول
+        // ذخیره ویژگی‌ها و مقادیر ویژگی‌ها
         if ($request->has('attributes')) {
-            foreach ($request->attributes as $attribute_id => $value_id) {
-                ProductVariantValue::create([
-                    'product_variant_id' => $product->id,
-                    'product_attribute_id' => $attribute_id,
-                    'product_attribute_value_id' => $value_id,
+            foreach ($request->attributes as $attributeData) {
+                // ذخیره ProductAttribute
+                $attribute = ProductAttribute::firstOrCreate([
+                    'name' => $attributeData['name']
                 ]);
+
+                // ذخیره مقادیر ویژگی (ProductAttributeValue)
+                foreach ($attributeData['values'] as $value) {
+                    ProductAttributeValue::firstOrCreate([
+                        'product_attribute_id' => $attribute->id,
+                        'value' => $value
+                    ]);
+                }
             }
         }
 
@@ -132,11 +139,21 @@ class ProductController extends Controller
 
         // بروزرسانی ویژگی‌ها
         if ($request->has('attributes')) {
-            foreach ($request->attributes as $attribute_id => $value_id) {
-                ProductVariantValue::updateOrCreate(
-                    ['product_variant_id' => $product->id, 'product_attribute_id' => $attribute_id],
-                    ['product_attribute_value_id' => $value_id]
+            foreach ($request->attributes as $attributeData) {
+                // ذخیره یا بروزرسانی ProductAttribute
+                $attribute = ProductAttribute::updateOrCreate(
+                    ['name' => $attributeData['name']]
                 );
+
+                // ذخیره یا بروزرسانی مقادیر ویژگی (ProductAttributeValue)
+                foreach ($attributeData['values'] as $value) {
+                    ProductAttributeValue::updateOrCreate(
+                        [
+                            'product_attribute_id' => $attribute->id,
+                            'value' => $value
+                        ]
+                    );
+                }
             }
         }
 
