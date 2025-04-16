@@ -16,7 +16,7 @@ class ProductController extends Controller
     // لیست کردن محصولات
     public function index()
     {
-        $products = Product::with('variants', 'galleries', 'attributes')->get();
+        $products = Product::query()->with(['variants', 'galleries', 'attributes'])->get();
         return response()->json($products);
     }
 
@@ -30,6 +30,8 @@ class ProductController extends Controller
             'stock_status' => 'required|boolean',
             'minimum_order_q' => 'required|integer',
             'maximum_order_q' => 'required|integer',
+            'is_spacial_offer' => 'required|boolean',
+            'spacial_offer_date' => 'required|date',
             'attributes' => 'nullable|array', // ویژگی‌های ارسالی
             'variants' => 'nullable|array', // تنوع‌ها
             'galleries' => 'nullable|array', // تصاویر گالری
@@ -50,6 +52,17 @@ class ProductController extends Controller
             'seo_description' => $request->seo_description,
         ]);
 
+        // ذخیره مشخصات
+        if($request->has('specifications') && count($request->specifications) > 0) {
+            foreach ($request->specifications as $specification) {
+                $product->specifications()->create([
+                    'title' => $specification['title'],
+                    'value' => $specification['value'],
+                ]);
+            }
+        }
+
+        
         // ذخیره ویژگی‌ها و مقادیر ویژگی‌ها
         if ($request->has('attributes')) {
             foreach ($request->attributes as $attributeData) {
@@ -67,6 +80,7 @@ class ProductController extends Controller
                 }
             }
         }
+
 
         // ذخیره تنوع‌ها
         if ($request->has('variants')) {
