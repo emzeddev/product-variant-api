@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use MongoDB\Laravel\Eloquent\Model;
 
 class Gallery extends Model
 {
     protected $connection = 'mongodb';
     protected $collection = 'galleries';
 
-    protected $fillable = ['product_id', 'image', 'is_main'];
+    protected $fillable = ['product_id', 'image', 'is_main', 'alt' , 'is_main'];
     protected $casts = [
         'is_main' => 'boolean',
     ];
