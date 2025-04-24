@@ -9,7 +9,7 @@ class Gallery extends Model
     protected $connection = 'mongodb';
     protected $collection = 'galleries';
 
-    protected $fillable = ['product_id', 'image', 'is_main', 'alt' , 'is_main'];
+    protected $fillable = ['product_id', 'file', 'is_main', 'alt'];
     protected $casts = [
         'is_main' => 'boolean',
     ];

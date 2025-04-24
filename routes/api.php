@@ -16,6 +16,25 @@ Route::group(['prefix' => 'v1'], function () {
         Route::get('/', [ProductController::class, 'getAttributes']);
         Route::post('/', [ProductController::class, 'saveAttribute']);
     });
+
+    Route::group(['prefix' => 'categories'] , function() {
+        Route::get('/', [ProductController::class, 'getCategories']);
+        Route::post('/', [ProductController::class, 'saveCategory']);
+    });
+
+    Route::group(['prefix' => 'brands'] , function() {
+        Route::get('/', [ProductController::class, 'getBrands']);
+        Route::post('/', [ProductController::class, 'saveBrand']);
+    });
+
+    Route::group(['prefix' => 'tags'] , function() {
+        Route::get('/', [ProductController::class, 'getTags']);
+        Route::post('/', [ProductController::class, 'saveTag']);
+    });
+
+    Route::group(['prefix' => 'tiny'] , function() {
+        Route::post('/', [ProductController::class, 'uploadTinyFile']);
+    });
 });
 
 

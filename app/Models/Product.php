@@ -15,12 +15,13 @@ class Product extends Model
         'fa_slug',
         'en_title',
         'en_slug',
+        'stock',
         'stock_status',
         'minimum_order_q',
         'maximum_order_q',
         'is_spacial_offer',
         'spacial_offer_date',
-        'is_product_variantion',
+        'has_variantion',
         'default_variation_id',
         'is_active',
         'price_before_offer',
@@ -29,6 +30,11 @@ class Product extends Model
         'description',
         'seo_title',
         'seo_description',
+        'primary_category_id',
+        'sku_number',
+        'guarantee',
+        'brand_id',
+        'is_draft',
     ];
 
     public function specifications() {
@@ -53,5 +59,25 @@ class Product extends Model
     public function defaultVariation()
     {
         return $this->belongsTo(ProductVariant::class, 'default_variation_id');
+    }
+
+    public function primaryCategory()
+    {
+        return $this->belongsTo(Category::class, 'primary_category_id');
+    }
+
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class, 'category_product' , 'product_id' , 'category_id');
+    }
+
+    public function tags()
+    {
+        return $this->belongsToMany(Tag::class, 'product_tag', 'product_id', 'tag_id');
+    }
+
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class);
     }
 }

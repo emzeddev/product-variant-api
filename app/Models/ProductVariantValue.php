@@ -10,7 +10,7 @@ class ProductVariantValue extends Model
     protected $connection = 'mongodb';
     protected $collection = 'product_variant_values';
 
-    protected $fillable = ['product_variant_id', 'product_attribute_id', 'product_attribute_value_id'];
+    protected $fillable = ['product_variant_id', 'product_attribute_id'];
 
     public function variant()
     {
@@ -20,10 +20,5 @@ class ProductVariantValue extends Model
     public function attribute()
     {
         return $this->belongsTo(ProductAttribute::class, 'product_attribute_id');
-    }
-
-    public function value()
-    {
-        return $this->belongsTo(ProductAttributeValue::class, 'product_attribute_value_id');
     }
 }
