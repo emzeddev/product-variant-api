@@ -10,9 +10,7 @@ class Gallery extends Model
     protected $collection = 'galleries';
 
     protected $fillable = ['product_id', 'file', 'is_main', 'alt'];
-    protected $casts = [
-        'is_main' => 'boolean',
-    ];
+
     
     public function product()
     {

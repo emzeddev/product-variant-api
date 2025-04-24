@@ -3,15 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
-use App\Models\ProductVariant;
 use App\Models\ProductVariantValue;
 use App\Models\Attribute;
 use App\Models\ProductAttribute;
 use App\Models\ProductAttributeValue;
-use App\Models\Gallery;
 use App\Models\Category;
 use App\Models\Brand;
 use App\Models\Tag;
+use App\Models\CategoryProduct;
+use App\Models\ProductTag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Response;
@@ -19,10 +19,9 @@ use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-    // لیست کردن محصولات
     public function index()
     {
-        $products = Product::query()->with(['variants', 'galleries', 'attributes'])->get();
+        $products = Product::query()->with(['variants', 'galleries' , 'primaryCategory' , 'brand'])->get();
         return response()->json($products);
     }
 
@@ -172,12 +171,11 @@ class ProductController extends Controller
         ], Response::HTTP_CREATED); 
     }
 
-
-
     public function store(Request $request) {
 
+
         $request->validate([
-            'primary_category_id' => 'required|exists:categories,id',
+            'primary_category_id' => 'required|exists:categories,_id',
         ], [
             'primary_category_id.required' => 'شناسه دسته‌بندی اصلی الزامی است.',
             'primary_category_id.exists' => 'شناسه دسته‌بندی اصلی معتبر نیست.',
@@ -213,68 +211,102 @@ class ProductController extends Controller
         ]);
 
         if (!empty($requestData['other_category_ids'])) {
-            $product->categories()->sync(json_decode($requestData['other_category_ids'], true));
+            foreach(json_decode($requestData['other_category_ids'] , true) as $key => $value) {
+                CategoryProduct::firstOrCreate([
+                    'category_id' => $value,
+                    'product_id' => $product->id
+                ]);
+            }
         }
 
         if (!empty($requestData['tags'])) {
-            $product->tags()->sync(json_decode($requestData['tags'], true));
+            foreach(json_decode($requestData['tags'] , true) as $key => $value) {
+                ProductTag::firstOrCreate([
+                    'tag_id' => $value,
+                    'product_id' => $product->id
+                ]);
+            }
         }
 
         if (!empty($requestData['galleries'])) {
-            foreach ($requestData['galleries'] as $gallery) {
-            $filePath = null;
-            if (!empty($gallery['file'])) {
-                $filePath = $gallery['file']->store('public/galleries');
+
+          
+            $mainGalleryIndex = collect($requestData['galleries'])->search(function ($item) {
+                return !empty($item['isMain']) && $item['isMain'] == 'true';
+            });
+
+           
+            if ($mainGalleryIndex === false) {
+                $mainGalleryIndex = 0;
             }
-            $product->galleries()->create([
-                'product_id' => $product->id,
-                'file' => $filePath ? Storage::url($filePath) : null,
-                'alt' => $gallery['alt'],
-                'is_main' => $gallery['isMain'],
-            ]);
+
+
+            foreach ($requestData['galleries'] as $index => $gallery) {
+                $filePath = null;
+                if (!empty($gallery['file'])) {
+                    $filePath = $gallery['file']->store('public/galleries');
+                }
+
+                $product->galleries()->create([
+                    'product_id' => $product->id,
+                    'file' => $filePath ?? 'null',
+                    'alt' => $gallery['alt'],
+                    'is_main' => $index === $mainGalleryIndex ? 'yes' : 'no',
+                ]);
             }
         }
 
         if (!empty($requestData['specifications'])) {
             foreach (json_decode($requestData['specifications'], true) as $specification) {
-            $product->specifications()->create([
-                'product_id' => $product->id,
-                'title' => $specification['feature'],
-                'value' => $specification['value'],
-            ]);
+                $product->specifications()->create([
+                    'product_id' => $product->id,
+                    'title' => $specification['feature'],
+                    'value' => $specification['value'],
+                ]);
             }
         }
 
         if (!empty($requestData['attributes'])) {
             foreach (json_decode($requestData['attributes'], true) as $attributeData) {
             $findAttrByName = Attribute::where('name', $attributeData['feature'])->first();
-            if ($findAttrByName instanceof Attribute) {
-                $attribute = ProductAttribute::firstOrCreate([
-                'attribute_id' => $findAttrByName->id,
-                'product_id' => $product->id,
-                ]);
-                foreach ($attributeData['values'] as $value) {
-                    ProductAttributeValue::firstOrCreate([
-                        'product_attribute_id' => $attribute->id,
-                        'value' => $value
+                if ($findAttrByName instanceof Attribute) {
+                    $attribute = ProductAttribute::firstOrCreate([
+                    'attribute_id' => $findAttrByName->id,
+                    'product_id' => $product->id,
                     ]);
+                    foreach ($attributeData['values'] as $value) {
+                        ProductAttributeValue::firstOrCreate([
+                            'product_attribute_id' => $attribute->id,
+                            'value' => $value
+                        ]);
+                    }
                 }
-            }
             }
         }
 
 
         if (!empty($requestData['variants'])) {
-            foreach ($requestData['variants'] as $variantData) {
+            foreach ($requestData['variants'] as $index => $variantData) {
                 $imagePath = null;
+                
                 if ($variantData['image'] instanceof \Illuminate\Http\UploadedFile) {
                     $imagePath = $variantData['image']->store('public/variants');
                 }
+
+                $isDefaultIndex = collect($requestData['variants'])->search(function ($item) {
+                    return !empty($item['is_default']) && $item['is_default'] == 'true';
+                });
+    
+               
+                if ($isDefaultIndex === false) {
+                    $isDefaultIndex = 0;
+                }
+
                 $variant = $product->variants()->create([
                     'product_id' => $product->id,
                     'height' => $variantData['height'] ?? null,
-                    'image' => $imagePath,
-                    'is_default' => $variantData['is_default'] ?? false,
+                    'image' => $imagePath ? $imagePath : 'null',
+                    'is_default' => $index === $isDefaultIndex ? 'yes' : 'no',
                     'length' => $variantData['length'] ?? null,
                     'preparation_time' => $variantData['preparation_time'] ?? 0,
                     'price' => $variantData['price'] ?? 0,
