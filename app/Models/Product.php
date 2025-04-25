@@ -68,12 +68,22 @@ class Product extends Model
 
     public function categories()
     {
-        return $this->belongsToMany(Category::class, 'category_product' , 'product_id' , 'category_id');
+        $categoryIds = CategoryProduct::where('product_id', $this->id)
+        ->pluck('category_id')
+        ->toArray();
+
+
+        return Category::whereIn('id', $categoryIds)->get();
     }
 
     public function tags()
     {
-        return $this->belongsToMany(Tag::class, 'product_tag', 'product_id', 'tag_id');
+        $tagIds = ProductTag::where('product_id', $this->id)
+        ->pluck('tag_id')
+        ->toArray();
+
+
+        return Tag::whereIn('id', $tagIds)->get();
     }
 
     public function brand()

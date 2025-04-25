@@ -24,6 +24,8 @@ class ProductVariant extends Model
         'height',
     ];
 
+    // protected $with = ['properties'];
+
     public function product()
     {
         return $this->belongsTo(Product::class);
@@ -31,6 +33,6 @@ class ProductVariant extends Model
 
     public function properties()
     {
-        return $this->hasMany(ProductVariantValue::class, 'variant_id');
+        return $this->hasMany(ProductVariantValue::class, 'product_variant_id');
     }
 }

@@ -25,7 +25,24 @@ class ProductController extends Controller
         return response()->json($products);
     }
 
-    // حذف محصول
+    public function show($id) {
+        $product = Product::query()
+        ->with([
+            'variants',
+            'galleries' ,
+            'primaryCategory' ,
+            'brand',
+            'specifications',
+            'attributes'
+        ])->findOrFail($id);
+        $product->categories = $product->categories();
+        $product->tags = $product->tags();
+
+        return response()->json([
+            'product' => $product
+        ] , Response::HTTP_OK);
+    }
+
     public function destroy($id)
     {
         // پیدا کردن محصول
@@ -46,14 +63,12 @@ class ProductController extends Controller
         return response()->json(['message' => 'محصول با موفقیت حذف شد.']);
     }
 
-    // متد برای آپلود تصویر
     private function uploadImage($image)
     {
         // ذخیره تصویر در دایرکتوری public/images
         $path = $image->store('public/images');
         return Storage::url($path); // بازگرداندن آدرس تصویر
     }
-
 
     public function getAttributes(Request $request) {
         return response()->json(
@@ -75,7 +90,6 @@ class ProductController extends Controller
             'message' => 'ویژگی با موفقیت ذخیره شد.'
         ], Response::HTTP_CREATED);
     }
-
 
     public function uploadTinyFile(Request $request)
     {
@@ -135,7 +149,6 @@ class ProductController extends Controller
             'category' => $category
         ], Response::HTTP_CREATED); 
     }
-
 
     public function saveBrand(Request $request) {
         $request->validate([
@@ -243,8 +256,8 @@ class ProductController extends Controller
 
             foreach ($requestData['galleries'] as $index => $gallery) {
                 $filePath = null;
-                if (!empty($gallery['file'])) {
-                    $filePath = $gallery['file']->store('public/galleries');
+                if ($gallery['file'] instanceof \Illuminate\Http\UploadedFile) {
+                    $filePath = $gallery['file']->store('galleries' , 'public');
                 }
 
                 $product->galleries()->create([
@@ -290,7 +303,7 @@ class ProductController extends Controller
                 $imagePath = null;
                 
                 if ($variantData['image'] instanceof \Illuminate\Http\UploadedFile) {
-                    $imagePath = $variantData['image']->store('public/variants');
+                    $imagePath = $variantData['image']->store('variants' , 'public');
                 }
 
                 $isDefaultIndex = collect($requestData['variants'])->search(function ($item) {
